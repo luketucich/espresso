@@ -1,6 +1,8 @@
+import { Coffee, NotebookPen, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   CreateNote,
+  DeleteNote,
   GetNotes,
   UpdateNoteContent,
   UpdateNoteTitle,
@@ -36,12 +38,34 @@ function App() {
 
   const selectedNote = notes[selectedNoteIndex] || null;
 
+  const formatTime = (timeString) => {
+    const date = new Date(timeString);
+
+    if (isNaN(date.getTime())) {
+      console.error("Invalid time format:", timeString);
+      return "Invalid date";
+    }
+
+    return date.toLocaleString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      month: "2-digit",
+      day: "2-digit",
+      year: "2-digit",
+    });
+  };
+
   return (
     <div className="wrapper">
       <div className="sidebar">
-        <h2 className="sidebar-title">espresso</h2>
+        <h2 className="sidebar-title">
+          <Coffee className="logo" strokeWidth={2} />
+          <span className="title-text">Espresso</span>
+        </h2>
         <button className="new-button" onClick={handleCreate}>
-          ➕ New
+          <span className="new-button-text">New</span>
+          <NotebookPen className="icon" />
         </button>
         <ul className="note-list">
           {notes.map((note, index) => (
@@ -52,7 +76,18 @@ function App() {
               }`}
               onClick={() => setSelectedNoteIndex(index)}
             >
-              {note.title || "Untitled"}
+              <span className="note-list-title">
+                {note.title || "Untitled"}
+              </span>
+              <Trash2
+                className="icon delete-icon"
+                onClick={(e) =>
+                  DeleteNote(note.id).then(() => {
+                    const updatedNotes = notes.filter((_, i) => i !== index);
+                    setNotes(updatedNotes);
+                  })
+                }
+              />
             </li>
           ))}
         </ul>
@@ -61,30 +96,43 @@ function App() {
       <div className="main">
         {selectedNote ? (
           <>
-            <input
-              className="note-title"
-              type="text"
-              value={selectedNote.title}
-              onChange={(e) => {
-                UpdateNoteTitle(selectedNote.id, e.target.value);
-                const updatedNotes = notes.map((note, index) =>
-                  index === selectedNoteIndex
-                    ? { ...note, title: e.target.value }
-                    : note
-                );
-                setNotes(updatedNotes);
-              }}
-              placeholder="Untitled"
-            ></input>
+            <div className="note-header">
+              <input
+                className="note-title"
+                type="text"
+                value={selectedNote.title}
+                onChange={(e) => {
+                  UpdateNoteTitle(selectedNote.id, e.target.value);
+                  const updatedNotes = notes.map((note, index) =>
+                    index === selectedNoteIndex
+                      ? {
+                          ...note,
+                          title: e.target.value,
+                          last_updated: new Date().toISOString(),
+                        }
+                      : note
+                  );
+                  setNotes(updatedNotes);
+                }}
+                placeholder="Untitled"
+              ></input>
+              <p className="note-date">
+                Last Updated {formatTime(selectedNote.last_updated)}
+              </p>
+            </div>
             <textarea
               className="note-content"
-              placeholder="Write your note here..."
+              placeholder="Type here to begin..."
               value={selectedNote.content}
               onChange={(e) => {
                 UpdateNoteContent(selectedNote.id, e.target.value);
                 const updatedNotes = notes.map((note, index) =>
                   index === selectedNoteIndex
-                    ? { ...note, content: e.target.value }
+                    ? {
+                        ...note,
+                        content: e.target.value,
+                        last_updated: new Date().toISOString(),
+                      }
                     : note
                 );
                 setNotes(updatedNotes);
