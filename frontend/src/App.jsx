@@ -57,48 +57,54 @@ function App() {
   };
 
   return (
-    <div className="wrapper">
-      <div className="sidebar">
-        <h2 className="sidebar-title">
+    <div className="app">
+      <aside className="sidebar">
+        <h2 className="sidebar__title">
           <Coffee className="logo" strokeWidth={2} />
-          <span className="title-text">Espresso</span>
+          <span className="sidebar__title-text">Espresso</span>
         </h2>
-        <button className="new-button" onClick={handleCreate}>
-          <span className="new-button-text">New</span>
+        <button className="sidebar__new-button" onClick={handleCreate}>
+          <span className="sidebar__new-button-text">New</span>
           <NotebookPen className="icon" />
         </button>
         <ul className="note-list">
           {notes.map((note, index) => (
             <li
               key={index}
-              className={`note-list-item ${
-                index === selectedNoteIndex ? "active" : ""
+              className={`note-list__item ${
+                index === selectedNoteIndex ? "note-list__item--active" : ""
               }`}
               onClick={() => setSelectedNoteIndex(index)}
             >
-              <span className="note-list-title">
+              <span className="note-list__title">
                 {note.title || "Untitled"}
               </span>
               <Trash2
-                className="icon delete-icon"
-                onClick={(e) =>
+                className="icon icon--delete"
+                onClick={(e) => {
+                  e.stopPropagation();
                   DeleteNote(note.id).then(() => {
                     const updatedNotes = notes.filter((_, i) => i !== index);
                     setNotes(updatedNotes);
-                  })
-                }
+                    if (selectedNoteIndex === index) {
+                      setSelectedNoteIndex(null);
+                    } else if (selectedNoteIndex > index) {
+                      setSelectedNoteIndex(selectedNoteIndex - 1);
+                    }
+                  });
+                }}
               />
             </li>
           ))}
         </ul>
-      </div>
+      </aside>
 
-      <div className="main">
+      <main className="note-editor">
         {selectedNote ? (
           <>
-            <div className="note-header">
+            <header className="note-editor__header">
               <input
-                className="note-title"
+                className="note-editor__title"
                 type="text"
                 value={selectedNote.title}
                 onChange={(e) => {
@@ -115,13 +121,13 @@ function App() {
                   setNotes(updatedNotes);
                 }}
                 placeholder="Untitled"
-              ></input>
-              <p className="note-date">
+              />
+              <p className="note-editor__date">
                 Last Updated {formatTime(selectedNote.last_updated)}
               </p>
-            </div>
+            </header>
             <textarea
-              className="note-content"
+              className="note-editor__content"
               placeholder="Type here to begin..."
               value={selectedNote.content}
               onChange={(e) => {
@@ -140,9 +146,9 @@ function App() {
             ></textarea>
           </>
         ) : (
-          <p className="placeholder">Create a note to begin</p>
+          <p className="note-editor__placeholder">Create a note to begin</p>
         )}
-      </div>
+      </main>
     </div>
   );
 }

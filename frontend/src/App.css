@@ -31,10 +31,18 @@ body {
   cursor: pointer;
   padding: 0.2rem;
   font-size: 1rem;
-  transition: ease 0.2s;
+  transition: color 0.2s ease;
 }
 
-.wrapper {
+.icon--delete {
+  color: var(--color-subtle);
+}
+
+.icon--delete:hover {
+  color: var(--color-delete);
+}
+
+.app {
   display: flex;
   height: 100vh;
 }
@@ -48,14 +56,14 @@ body {
   flex-direction: column;
 }
 
-.sidebar-title {
+.sidebar__title {
   display: flex;
   align-items: center;
   margin-bottom: var(--spacing);
   gap: 0.5rem;
 }
 
-.title-text {
+.sidebar__title-text {
   font-size: 1.6rem;
   font-weight: bold;
   color: var(--color-text);
@@ -67,7 +75,7 @@ body {
   color: var(--color-text);
 }
 
-.new-button {
+.sidebar__new-button {
   padding: 0.6rem 1rem;
   font-size: 1rem;
   background-color: var(--color-accent);
@@ -76,14 +84,14 @@ body {
   border-radius: var(--radius);
   cursor: pointer;
   margin-bottom: var(--spacing);
-  transition: background-color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
+  transition: background-color 0.2s ease;
 }
 
-.new-button:hover {
+.sidebar__new-button:hover {
   background-color: var(--color-accent-hover);
 }
 
@@ -94,26 +102,26 @@ body {
   padding-right: 0.2rem;
 }
 
-.note-list-item {
+.note-list__item {
   padding: 0.6rem;
   border-radius: var(--radius);
   margin-bottom: 0.4rem;
   cursor: pointer;
-  transition: background 0.2s ease;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: background-color 0.2s ease;
 }
 
-.note-list-item:hover {
+.note-list__item:hover {
   background-color: #dcd1c3;
 }
 
-.note-list-item.active {
+.note-list__item--active {
   background-color: var(--color-active);
 }
 
-.note-list-title {
+.note-list__title {
   color: var(--color-text);
   font-size: 0.95rem;
   font-weight: 500;
@@ -123,31 +131,21 @@ body {
   text-overflow: ellipsis;
 }
 
-.delete-icon {
-  color: var(--color-subtle);
-  transition: color 0.2s ease;
-}
-
-.delete-icon:hover {
-  color: var(--color-delete);
-}
-
-.main {
+.note-editor {
   flex: 1;
   padding: 2rem;
-  background-color: var(--color-bg);
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.note-header {
+.note-editor__header {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.note-title {
+.note-editor__title {
   font-size: 2rem;
   font-weight: 600;
   color: var(--color-text);
@@ -157,16 +155,16 @@ body {
   width: 100%;
 }
 
-.note-title::placeholder {
+.note-editor__title::placeholder {
   color: var(--color-subtle);
 }
 
-.note-date {
+.note-editor__date {
   font-size: 0.85rem;
   color: var(--color-subtle);
 }
 
-.note-content {
+.note-editor__content {
   font-size: 1.05rem;
   line-height: 1.6;
   color: var(--color-text);
@@ -180,11 +178,11 @@ body {
   flex: 1;
 }
 
-.note-content::placeholder {
+.note-editor__content::placeholder {
   color: var(--color-subtle);
 }
 
-.placeholder {
+.note-editor__placeholder {
   color: var(--color-subtle);
   font-size: 1.1rem;
   text-align: center;
