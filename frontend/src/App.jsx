@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
-import { CreateNote, GetNotes } from "../wailsjs/go/main/App";
-import "./App.css"; // Import the CSS
+import {
+  CreateNote,
+  GetNotes,
+  UpdateNoteContent,
+  UpdateNoteTitle,
+} from "../wailsjs/go/main/App";
+import "./App.css";
 
 function App() {
   const [notes, setNotes] = useState([]);
@@ -23,7 +28,7 @@ function App() {
   }, []);
 
   const handleCreate = async () => {
-    await CreateNote("Untitled", "Empty note");
+    await CreateNote("", "");
     const updatedNotes = await GetNotes();
     setNotes(updatedNotes);
     setSelectedNoteIndex(updatedNotes.length - 1);
@@ -56,8 +61,35 @@ function App() {
       <div className="main">
         {selectedNote ? (
           <>
-            <h2 className="note-title">{selectedNote.title}</h2>
-            <p className="note-content">{selectedNote.content}</p>
+            <input
+              className="note-title"
+              type="text"
+              value={selectedNote.title}
+              onChange={(e) => {
+                UpdateNoteTitle(selectedNote.id, e.target.value);
+                const updatedNotes = notes.map((note, index) =>
+                  index === selectedNoteIndex
+                    ? { ...note, title: e.target.value }
+                    : note
+                );
+                setNotes(updatedNotes);
+              }}
+              placeholder="Untitled"
+            ></input>
+            <textarea
+              className="note-content"
+              placeholder="Write your note here..."
+              value={selectedNote.content}
+              onChange={(e) => {
+                UpdateNoteContent(selectedNote.id, e.target.value);
+                const updatedNotes = notes.map((note, index) =>
+                  index === selectedNoteIndex
+                    ? { ...note, content: e.target.value }
+                    : note
+                );
+                setNotes(updatedNotes);
+              }}
+            ></textarea>
           </>
         ) : (
           <p className="placeholder">Create a note to begin</p>
