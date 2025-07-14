@@ -10,6 +10,7 @@ import {
 import "./App.css";
 
 function App() {
+  const [showModal, setShowModal] = useState(false);
   const [notes, setNotes] = useState([]);
   const [selectedNoteIndex, setSelectedNoteIndex] = useState(null);
 
@@ -22,6 +23,16 @@ function App() {
       if (ctrlOrCmd && e.key.toLowerCase() === "n") {
         e.preventDefault();
         handleCreate();
+      }
+
+      // Delete note with Ctrl/Cmd + Backspace
+      if (
+        ctrlOrCmd &&
+        (e.key === "Backspace" || e.key === "Delete") &&
+        selectedNoteIndex !== null
+      ) {
+        e.preventDefault();
+        setShowModal(true);
       }
     };
 
@@ -73,116 +84,141 @@ function App() {
   };
 
   return (
-    <div className="app">
-      <aside className="sidebar">
-        <h2 className="sidebar__title">
-          <Coffee className="logo" strokeWidth={2.25} />
-          <span className="sidebar__title-text">espresso</span>
-        </h2>
-        <button className="sidebar__new-button" onClick={handleCreate}>
-          <span className="sidebar__new-button-text">New</span>
-          <NotebookPen className="icon" />
-        </button>
-        <ul className="note-list">
-          {notes.map((note, index) => (
-            <li
-              key={index}
-              className={`note-list__item ${
-                index === selectedNoteIndex ? "note-list__item--active" : ""
-              }`}
-              onClick={() => setSelectedNoteIndex(index)}
-            >
-              <span className="note-list__title">
-                {note.title || "Untitled"}
-              </span>
-              <Trash2
-                className="icon icon--delete"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  DeleteNote(note.id).then(() => {
-                    const updatedNotes = notes.filter((_, i) => i !== index);
-                    setNotes(updatedNotes);
-                    if (selectedNoteIndex === index) {
-                      setSelectedNoteIndex(null);
-                    } else if (selectedNoteIndex > index) {
-                      setSelectedNoteIndex(selectedNoteIndex - 1);
-                    }
-                  });
-                }}
-              />
-            </li>
-          ))}
-        </ul>
-      </aside>
+    <>
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <p>Are you sure you want to delete this note?</p>
+            <div className="modal-buttons">
+              <button
+                onClick={() => {
+                  DeleteNote(selectedNoteIndex);
+                  setNotes((prevNotes) =>
+                    prevNotes.filter((_, index) => index !== selectedNoteIndex)
+                  );
 
-      <main className="note-editor">
-        {selectedNote ? (
-          <>
-            <header className="note-editor__header">
-              <input
-                className="note-editor__title"
-                type="text"
-                value={selectedNote.title}
+                  if (selectedNoteIndex >= notes.length - 1) {
+                    setSelectedNoteIndex(notes.length - 2);
+                  } else {
+                    setSelectedNoteIndex(null);
+                  }
+
+                  setShowModal(false);
+                }}
+              >
+                Yup!
+              </button>
+              <button onClick={() => setShowModal(false)}>
+                Wait, nevermind.
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="app">
+        <aside className="sidebar">
+          <h2 className="sidebar__title">
+            <Coffee className="logo" strokeWidth={2.25} />
+            <span className="sidebar__title-text">espresso</span>
+          </h2>
+          <button className="sidebar__new-button" onClick={handleCreate}>
+            <span className="sidebar__new-button-text">New</span>
+            <NotebookPen className="icon" />
+          </button>
+          <ul className="note-list">
+            {notes.map((note, index) => (
+              <li
+                key={index}
+                className={`note-list__item ${
+                  index === selectedNoteIndex ? "note-list__item--active" : ""
+                }`}
+                onClick={() => setSelectedNoteIndex(index)}
+              >
+                <span className="note-list__title">
+                  {note.title || "Untitled"}
+                </span>
+                <Trash2
+                  className="icon icon--delete"
+                  onClick={(index) => {
+                    setSelectedNoteIndex(index);
+                    setShowModal(true);
+                  }}
+                />
+              </li>
+            ))}
+          </ul>
+        </aside>
+
+        <main className="note-editor">
+          {selectedNote ? (
+            <>
+              <header className="note-editor__header">
+                <input
+                  className="note-editor__title"
+                  type="text"
+                  value={selectedNote.title}
+                  onChange={(e) => {
+                    UpdateNoteTitle(selectedNoteIndex, e.target.value);
+                    const updatedNotes = notes.map((note, index) =>
+                      index === selectedNoteIndex
+                        ? {
+                            ...note,
+                            title: e.target.value,
+                            last_updated: new Date().toISOString(),
+                          }
+                        : note
+                    );
+                    setNotes(updatedNotes);
+                  }}
+                  placeholder="Untitled"
+                />
+                <p className="note-editor__date">
+                  Last Updated {formatTime(selectedNote.last_updated)}
+                </p>
+              </header>
+              <textarea
+                className="note-editor__content"
+                placeholder="Type here to begin..."
+                value={selectedNote.content}
                 onChange={(e) => {
-                  UpdateNoteTitle(selectedNoteIndex, e.target.value);
+                  UpdateNoteContent(selectedNoteIndex, e.target.value);
                   const updatedNotes = notes.map((note, index) =>
                     index === selectedNoteIndex
                       ? {
                           ...note,
-                          title: e.target.value,
+                          content: e.target.value,
                           last_updated: new Date().toISOString(),
                         }
                       : note
                   );
                   setNotes(updatedNotes);
                 }}
-                placeholder="Untitled"
-              />
-              <p className="note-editor__date">
-                Last Updated {formatTime(selectedNote.last_updated)}
+              ></textarea>
+            </>
+          ) : (
+            <div style={{ textAlign: "center", color: "#666" }}>
+              <p
+                className="note-editor__placeholder"
+                style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}
+              >
+                Welcome to espresso!
               </p>
-            </header>
-            <textarea
-              className="note-editor__content"
-              placeholder="Type here to begin..."
-              value={selectedNote.content}
-              onChange={(e) => {
-                UpdateNoteContent(selectedNoteIndex, e.target.value);
-                const updatedNotes = notes.map((note, index) =>
-                  index === selectedNoteIndex
-                    ? {
-                        ...note,
-                        content: e.target.value,
-                        last_updated: new Date().toISOString(),
-                      }
-                    : note
-                );
-                setNotes(updatedNotes);
-              }}
-            ></textarea>
-          </>
-        ) : (
-          <div style={{ textAlign: "center", color: "#666" }}>
-            <p
-              className="note-editor__placeholder"
-              style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}
-            >
-              Welcome to espresso notes!
-            </p>
-            <p
-              className="note-editor__placeholder"
-              style={{ fontSize: "1rem" }}
-            >
-              Press{" "}
-              <span className="shortcut" style={{ fontWeight: "bold" }}>
-                Ctrl/Cmd + N
-              </span>{" "}
-              to create a new note
-            </p>
-          </div>
-        )}
-      </main>
-    </div>
+              <p
+                className="note-editor__placeholder"
+                style={{ fontSize: "1rem" }}
+              >
+                Press{" "}
+                <span className="shortcut" style={{ fontWeight: "bold" }}>
+                  Ctrl/Cmd + N
+                </span>{" "}
+                to create a new note
+              </p>
+            </div>
+          )}
+        </main>
+      </div>
+    </>
   );
 }
 

@@ -78,10 +78,10 @@ func SaveNotesToFile(notes []Note) {
 	}
 	defer file.Close()
 
-encoder := json.NewEncoder(file)
+	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
 
-if err := encoder.Encode(notes); err != nil {
+	if err := encoder.Encode(notes); err != nil {
 		// Failed to encode notes to JSON
 		fmt.Println("Error encoding notes:", err)
 	}

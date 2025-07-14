@@ -65,7 +65,7 @@ body {
 
 .sidebar__title-text {
   font-size: 1.6rem;
-  font-weight: bold;
+  font-weight: 600;
   color: var(--color-text);
 }
 
@@ -187,4 +187,67 @@ body {
   font-size: 1.1rem;
   text-align: center;
   margin-top: 2rem;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(43, 32, 24, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  backdrop-filter: blur(0.5rem);
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  background-color: var(--color-sidebar-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.2);
+  color: var(--color-text);
+  width: 90%;
+  max-width: 20rem;
+  text-align: center;
+  z-index: 1000;
+}
+
+.modal p {
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.modal-buttons button {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.modal-buttons button:hover {
+  background-color: var(--color-accent-hover);
 }
