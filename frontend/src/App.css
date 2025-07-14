@@ -1,59 +1,105 @@
-#app {
-    height: 100vh;
-    text-align: center;
+:root {
+  --color-bg: #f9f9f6;
+  --color-sidebar-bg: #e7f0da;
+  --color-sidebar-border: #d3e0c2;
+  --color-accent: #90b77d;
+  --color-accent-hover: #789f6b;
+  --color-text: #2e2e2e;
+  --color-subtle: #666;
+  --color-active: #c6ddb3;
+
+  --radius: 0.6rem;
+  --spacing: 1rem;
 }
 
-#logo {
-    display: block;
-    width: 50%;
-    height: 50%;
-    margin: auto;
-    padding: 10% 0 0;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    background-origin: content-box;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.result {
-    height: 20px;
-    line-height: 20px;
-    margin: 1.5rem auto;
+body {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
 }
 
-.input-box .btn {
-    width: 60px;
-    height: 30px;
-    line-height: 30px;
-    border-radius: 3px;
-    border: none;
-    margin: 0 0 0 20px;
-    padding: 0 8px;
-    cursor: pointer;
+.wrapper {
+  display: flex;
+  height: 100vh;
 }
 
-.input-box .btn:hover {
-    background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
-    color: #333333;
+.sidebar {
+  width: 18rem;
+  background-color: var(--color-sidebar-bg);
+  border-right: 1px solid var(--color-sidebar-border);
+  padding: var(--spacing);
+  display: flex;
+  flex-direction: column;
 }
 
-.input-box .input {
-    border: none;
-    border-radius: 3px;
-    outline: none;
-    height: 30px;
-    line-height: 30px;
-    padding: 0 10px;
-    background-color: rgba(240, 240, 240, 1);
-    -webkit-font-smoothing: antialiased;
+.sidebar-title {
+  font-size: 1.5rem;
+  margin-bottom: var(--spacing);
 }
 
-.input-box .input:hover {
-    border: none;
-    background-color: rgba(255, 255, 255, 1);
+.new-button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin-bottom: var(--spacing);
+  transition: background-color 0.2s ease;
 }
 
-.input-box .input:focus {
-    border: none;
-    background-color: rgba(255, 255, 255, 1);
+.new-button:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.note-list {
+  list-style: none;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.note-list-item {
+  padding: 0.6rem;
+  border-radius: var(--radius);
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.note-list-item:hover {
+  background-color: #dbead2;
+}
+
+.note-list-item.active {
+  background-color: var(--color-active);
+}
+
+.main {
+  flex: 1;
+  padding: 2rem;
+  background-color: var(--color-bg);
+}
+
+.note-title {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.note-content {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: var(--color-subtle);
+  white-space: pre-wrap;
+}
+
+.placeholder {
+  color: var(--color-subtle);
+  font-size: 1.1rem;
 }

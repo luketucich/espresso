@@ -13,7 +13,9 @@ type App struct {
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{}
+  return &App{
+        Notes: []notes.Note{}, // initialize as empty slice — no longer nil
+    }
 }
 
 // startup is called when the app starts. The context is saved
