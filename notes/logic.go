@@ -1,6 +1,12 @@
 package notes
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+)
 
 func CreateNote(notes []Note, title, body string) []Note {
 	newNote := Note{
@@ -40,4 +46,43 @@ func UpdateNoteTitle(notes []Note, index int, newTitle string) []Note {
 	notes[index].LastUpdated = time.Now()
 
 	return notes
+}
+
+func LoadNotesFromFile() []Note {
+	notesFilePath := filepath.Join("notes", "notes.json")
+
+	file, err := os.Open(notesFilePath)
+	if err != nil {
+		// File doesn't exist or can't be opened; return empty notes
+		return []Note{}
+	}
+	defer file.Close()
+
+	var notes []Note
+	if err := json.NewDecoder(file).Decode(&notes); err != nil {
+		// Failed to decode JSON; return empty notes
+		return []Note{}
+	}
+
+	return notes
+}
+
+func SaveNotesToFile(notes []Note) {
+	notesFilePath := filepath.Join("notes", "notes.json")
+
+	file, err := os.Create(notesFilePath)
+	if err != nil {
+		// Could not create/write to file
+		fmt.Println("Error saving notes:", err)
+		return
+	}
+	defer file.Close()
+
+encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+
+if err := encoder.Encode(notes); err != nil {
+		// Failed to encode notes to JSON
+		fmt.Println("Error encoding notes:", err)
+	}
 }

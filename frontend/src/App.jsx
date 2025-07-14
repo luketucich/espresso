@@ -14,6 +14,22 @@ function App() {
   const [selectedNoteIndex, setSelectedNoteIndex] = useState(null);
 
   useEffect(() => {
+    const handleKeyDown = (e) => {
+      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+      const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
+
+      // Create note with Ctrl/Cmd + N
+      if (ctrlOrCmd && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        handleCreate();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [notes, selectedNoteIndex]);
+
+  useEffect(() => {
     async function fetchNotes() {
       try {
         const data = await GetNotes();
@@ -60,8 +76,8 @@ function App() {
     <div className="app">
       <aside className="sidebar">
         <h2 className="sidebar__title">
-          <Coffee className="logo" strokeWidth={2} />
-          <span className="sidebar__title-text">Espresso</span>
+          <Coffee className="logo" strokeWidth={2.25} />
+          <span className="sidebar__title-text">espresso</span>
         </h2>
         <button className="sidebar__new-button" onClick={handleCreate}>
           <span className="sidebar__new-button-text">New</span>
@@ -108,7 +124,7 @@ function App() {
                 type="text"
                 value={selectedNote.title}
                 onChange={(e) => {
-                  UpdateNoteTitle(selectedNote.id, e.target.value);
+                  UpdateNoteTitle(selectedNoteIndex, e.target.value);
                   const updatedNotes = notes.map((note, index) =>
                     index === selectedNoteIndex
                       ? {
@@ -131,7 +147,7 @@ function App() {
               placeholder="Type here to begin..."
               value={selectedNote.content}
               onChange={(e) => {
-                UpdateNoteContent(selectedNote.id, e.target.value);
+                UpdateNoteContent(selectedNoteIndex, e.target.value);
                 const updatedNotes = notes.map((note, index) =>
                   index === selectedNoteIndex
                     ? {
@@ -146,7 +162,24 @@ function App() {
             ></textarea>
           </>
         ) : (
-          <p className="note-editor__placeholder">Create a note to begin</p>
+          <div style={{ textAlign: "center", color: "#666" }}>
+            <p
+              className="note-editor__placeholder"
+              style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}
+            >
+              Welcome to espresso notes!
+            </p>
+            <p
+              className="note-editor__placeholder"
+              style={{ fontSize: "1rem" }}
+            >
+              Press{" "}
+              <span className="shortcut" style={{ fontWeight: "bold" }}>
+                Ctrl/Cmd + N
+              </span>{" "}
+              to create a new note
+            </p>
+          </div>
         )}
       </main>
     </div>
