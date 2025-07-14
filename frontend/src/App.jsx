@@ -39,7 +39,7 @@ function App() {
   return (
     <div className="wrapper">
       <div className="sidebar">
-        <h2 className="sidebar-title">matcha</h2>
+        <h2 className="sidebar-title">espresso</h2>
         <button className="new-button" onClick={handleCreate}>
           ➕ New
         </button>

@@ -1,4 +1,4 @@
-module matcha
+module espresso
 
 go 1.23.0
 

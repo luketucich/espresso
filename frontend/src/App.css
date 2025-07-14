@@ -1,12 +1,12 @@
 :root {
-  --color-bg: #f9f9f6;
-  --color-sidebar-bg: #e7f0da;
-  --color-sidebar-border: #d3e0c2;
-  --color-accent: #90b77d;
-  --color-accent-hover: #789f6b;
-  --color-text: #2e2e2e;
-  --color-subtle: #666;
-  --color-active: #c6ddb3;
+  --color-bg: #f5f1ea;
+  --color-sidebar-bg: #e6dfd5;
+  --color-sidebar-border: #d5c9b7;
+  --color-accent: #a18267;
+  --color-accent-hover: #8a6f58;
+  --color-text: #3e2e23;
+  --color-subtle: #7d6b5d;
+  --color-active: #d5c4b0;
 
   --radius: 0.6rem;
   --spacing: 1rem;
@@ -74,7 +74,7 @@ body {
 }
 
 .note-list-item:hover {
-  background-color: #dbead2;
+  background-color: #dccfc0;
 }
 
 .note-list-item.active {

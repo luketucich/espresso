@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"matcha/notes"
+	"espresso/notes"
 )
 
 // App struct
