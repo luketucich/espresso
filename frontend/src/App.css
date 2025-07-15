@@ -8,6 +8,7 @@
   --color-subtle: #9a8573;
   --color-active: #d3c3b1;
   --color-delete: #e26a6a;
+  --sidebar-width: 288px;
 
   --radius: 0.6rem;
   --spacing: 1rem;
@@ -17,6 +18,10 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 body {
@@ -30,8 +35,11 @@ body {
   border: none;
   cursor: pointer;
   padding: 0.2rem;
-  font-size: 1rem;
-  transition: color 0.2s ease;
+  font-size: clamp(
+    1rem,
+    calc(var(--sidebar-width) / 16),
+    1.6rem
+  ); /* more consistent scaling */
 }
 
 .icon--delete {
@@ -48,12 +56,26 @@ body {
 }
 
 .sidebar {
-  width: 18rem;
+  width: var(--sidebar-width);
   background-color: var(--color-sidebar-bg);
   border-right: 1px solid var(--color-sidebar-border);
   padding: var(--spacing);
   display: flex;
   flex-direction: column;
+  min-width: 8rem;
+  max-width: 30rem;
+  position: relative;
+}
+
+.sidebar__resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0.3rem;
+  height: 100%;
+  cursor: col-resize;
+  background-color: transparent;
+  z-index: 10;
 }
 
 .sidebar__title {
@@ -61,23 +83,19 @@ body {
   align-items: center;
   margin-bottom: var(--spacing);
   gap: 0.5rem;
+  cursor: pointer;
 }
 
 .sidebar__title-text {
-  font-size: 1.6rem;
+  font-size: clamp(1rem, calc(var(--sidebar-width) / 12), 2rem);
   font-weight: 600;
   color: var(--color-text);
 }
 
-.logo {
-  width: 1.8rem;
-  height: 1.8rem;
-  color: var(--color-text);
-}
-
 .sidebar__new-button {
-  padding: 0.6rem 1rem;
-  font-size: 1rem;
+  padding: clamp(0.4rem, calc(var(--sidebar-width) / 40), 0.8rem)
+    clamp(0.6rem, calc(var(--sidebar-width) / 25), 1.2rem);
+  font-size: clamp(1rem, calc(var(--sidebar-width) / 18), 1.5rem);
   background-color: var(--color-accent);
   color: white;
   border: none;
@@ -88,7 +106,6 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  transition: background-color 0.2s ease;
 }
 
 .sidebar__new-button:hover {
@@ -110,7 +127,6 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: background-color 0.2s ease;
 }
 
 .note-list__item:hover {
@@ -123,12 +139,14 @@ body {
 
 .note-list__title {
   color: var(--color-text);
-  font-size: 0.95rem;
+  font-size: clamp(0.85rem, calc(var(--sidebar-width) / 22), 1.2rem);
   font-weight: 500;
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 3rem;
+  max-width: calc(var(--sidebar-width) - 2rem);
 }
 
 .note-editor {
@@ -153,6 +171,10 @@ body {
   background-color: transparent;
   outline: none;
   width: 100%;
+  user-select: text;
+  -moz-user-select: text;
+  -webkit-user-select: text;
+  -ms-user-select: text;
 }
 
 .note-editor__title::placeholder {
@@ -176,6 +198,10 @@ body {
   resize: none;
   padding: 0.5rem 0;
   flex: 1;
+  user-select: text;
+  -moz-user-select: text;
+  -webkit-user-select: text;
+  -ms-user-select: text;
 }
 
 .note-editor__content::placeholder {
@@ -201,16 +227,6 @@ body {
   align-items: center;
   z-index: 999;
   backdrop-filter: blur(0.5rem);
-  animation: fadeIn 0.2s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 .modal {
@@ -243,7 +259,6 @@ body {
   border: none;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: background-color 0.2s ease;
   background-color: var(--color-accent);
   color: white;
 }

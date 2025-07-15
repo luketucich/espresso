@@ -1,4 +1,4 @@
-import { Coffee, NotebookPen, Trash2 } from "lucide-react";
+import { NotebookPen, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   CreateNote,
@@ -10,10 +10,39 @@ import {
 import "./App.css";
 
 function App() {
+  const [isResizing, setIsResizing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [notes, setNotes] = useState([]);
   const [selectedNoteIndex, setSelectedNoteIndex] = useState(null);
 
+  // Handle sidebar resizing
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e) => {
+      const newWidth = e.clientX;
+      document.documentElement.style.setProperty(
+        "--sidebar-width",
+        `${newWidth}px`
+      );
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing]);
+
+  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
@@ -40,6 +69,7 @@ function App() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [notes, selectedNoteIndex]);
 
+  // Fetch notes on initial load
   useEffect(() => {
     async function fetchNotes() {
       try {
@@ -63,8 +93,6 @@ function App() {
     setSelectedNoteIndex(updatedNotes.length - 1);
   };
 
-  const selectedNote = notes[selectedNoteIndex] || null;
-
   const formatTime = (timeString) => {
     const date = new Date(timeString);
 
@@ -82,6 +110,8 @@ function App() {
       year: "2-digit",
     });
   };
+
+  const selectedNote = notes[selectedNoteIndex] || null;
 
   return (
     <>
@@ -118,8 +148,10 @@ function App() {
 
       <div className="app">
         <aside className="sidebar">
-          <h2 className="sidebar__title">
-            <Coffee className="logo" strokeWidth={2.25} />
+          <h2
+            className="sidebar__title"
+            onClick={() => setSelectedNoteIndex(null)}
+          >
             <span className="sidebar__title-text">espresso</span>
           </h2>
           <button className="sidebar__new-button" onClick={handleCreate}>
@@ -148,6 +180,10 @@ function App() {
               </li>
             ))}
           </ul>
+          <div
+            className="sidebar__resizer"
+            onMouseDown={() => setIsResizing(true)}
+          />
         </aside>
 
         <main className="note-editor">
@@ -197,22 +233,32 @@ function App() {
               ></textarea>
             </>
           ) : (
-            <div style={{ textAlign: "center", color: "#666" }}>
-              <p
-                className="note-editor__placeholder"
-                style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}
-              >
-                Welcome to espresso!
+            <div style={{ textAlign: "center" }}>
+              <p className="note-editor__placeholder">
+                Start by creating a new note or selecting an existing one.
               </p>
-              <p
-                className="note-editor__placeholder"
-                style={{ fontSize: "1rem" }}
-              >
+              <p className="note-editor__placeholder">
+                You can also use shortcuts to help you speed up your workflow.
+              </p>
+              <p className="note-editor__placeholder">
                 Press{" "}
-                <span className="shortcut" style={{ fontWeight: "bold" }}>
+                <span
+                  className="note-editor__placeholder"
+                  style={{ fontWeight: "bold" }}
+                >
                   Ctrl/Cmd + N
                 </span>{" "}
                 to create a new note
+              </p>
+              <p className="note-editor__placeholder">
+                Press{" "}
+                <span
+                  className="note-editor__placeholder"
+                  style={{ fontWeight: "bold" }}
+                >
+                  Ctrl/Cmd + D
+                </span>{" "}
+                to delete a new note
               </p>
             </div>
           )}
