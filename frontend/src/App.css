@@ -1,3 +1,4 @@
+/* ===== CSS VARIABLES ===== */
 :root {
   --color-bg: #f5f1ea;
   --color-sidebar-bg: #e8e0d6;
@@ -8,12 +9,31 @@
   --color-subtle: #9a8573;
   --color-active: #d3c3b1;
   --color-delete: #e26a6a;
-  --sidebar-width: 288px;
+  --color-hover: #dcd1c3;
+  --color-modal-overlay: rgba(43, 32, 24, 0.5);
 
-  --radius: 0.6rem;
+  --sidebar-width: 288px;
+  --border-radius: 0.6rem;
   --spacing: 1rem;
+  --spacing-small: 0.5rem;
+  --spacing-large: 2rem;
+
+  --font-size-small: 0.85rem;
+  --font-size-base: 1rem;
+  --font-size-large: 1.05rem;
+  --font-size-title: 2rem;
+  --font-size-subtitle: 1.1rem;
+
+  --line-height-base: 1.6;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  --transition-fast: 0.2s ease-in-out;
+  --shadow-modal: 0 1rem 2rem rgba(0, 0, 0, 0.2);
 }
 
+/* ===== BASE STYLES ===== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -28,33 +48,17 @@ body {
   font-family: "Segoe UI", system-ui, sans-serif;
   background-color: var(--color-bg);
   color: var(--color-text);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
 }
 
-.icon {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.2rem;
-  font-size: clamp(
-    1rem,
-    calc(var(--sidebar-width) / 16),
-    1.6rem
-  ); /* more consistent scaling */
-}
-
-.icon--delete {
-  color: var(--color-subtle);
-}
-
-.icon--delete:hover {
-  color: var(--color-delete);
-}
-
+/* ===== MAIN LAYOUT ===== */
 .app {
   display: flex;
   height: 100vh;
 }
 
+/* ===== SIDEBAR STYLES ===== */
 .sidebar {
   width: var(--sidebar-width);
   background-color: var(--color-sidebar-bg);
@@ -62,9 +66,99 @@ body {
   padding: var(--spacing);
   display: flex;
   flex-direction: column;
-  min-width: 8rem;
-  max-width: 30rem;
   position: relative;
+}
+
+.sidebar--emoji-open {
+  --sidebar-width: 20rem;
+  transition: width var(--transition-fast);
+}
+
+.sidebar__header {
+  margin-bottom: var(--spacing);
+}
+
+.sidebar__title {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing);
+  gap: var(--spacing-small);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+.sidebar__title-text {
+  font-size: clamp(
+    var(--font-size-base),
+    calc(var(--sidebar-width) / 12),
+    var(--font-size-title)
+  );
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.sidebar__button {
+  padding: clamp(0.4rem, calc(var(--sidebar-width) / 40), 0.8rem)
+    clamp(0.6rem, calc(var(--sidebar-width) / 25), 1.2rem);
+  font-size: clamp(
+    var(--font-size-base),
+    calc(var(--sidebar-width) / 18),
+    1.5rem
+  );
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: background-color var(--transition-fast);
+}
+
+.sidebar__button:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.sidebar__button--new {
+  width: 100%;
+  margin-bottom: var(--spacing);
+}
+
+.sidebar__button--emoji {
+  width: 2rem;
+  height: 2rem;
+  margin-top: 0.3rem;
+  padding: 0;
+}
+
+.sidebar__button-text {
+  font-weight: var(--font-weight-medium);
+}
+
+.sidebar__button-icon {
+  width: 1.3rem;
+  height: 1.3rem;
+  font-size: clamp(
+    var(--font-size-base),
+    calc(var(--sidebar-width) / 16),
+    1.6rem
+  );
+}
+
+.sidebar__nav {
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar__footer {
+  margin-top: auto;
+}
+
+.sidebar__emoji-picker {
+  margin-bottom: var(--spacing-small);
 }
 
 .sidebar__resizer {
@@ -78,59 +172,27 @@ body {
   z-index: 10;
 }
 
-.sidebar__title {
-  display: flex;
-  align-items: center;
-  margin-bottom: var(--spacing);
-  gap: 0.5rem;
-  cursor: pointer;
-}
-
-.sidebar__title-text {
-  font-size: clamp(1rem, calc(var(--sidebar-width) / 12), 2rem);
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.sidebar__new-button {
-  padding: clamp(0.4rem, calc(var(--sidebar-width) / 40), 0.8rem)
-    clamp(0.6rem, calc(var(--sidebar-width) / 25), 1.2rem);
-  font-size: clamp(1rem, calc(var(--sidebar-width) / 18), 1.5rem);
-  background-color: var(--color-accent);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  margin-bottom: var(--spacing);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-}
-
-.sidebar__new-button:hover {
-  background-color: var(--color-accent-hover);
-}
-
+/* ===== NOTE LIST STYLES ===== */
 .note-list {
   list-style: none;
   overflow-y: auto;
-  flex: 1;
+  height: 100%;
   padding-right: 0.2rem;
 }
 
 .note-list__item {
   padding: 0.6rem;
-  border-radius: var(--radius);
+  border-radius: var(--border-radius);
   margin-bottom: 0.4rem;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: background-color var(--transition-fast);
 }
 
 .note-list__item:hover {
-  background-color: #dcd1c3;
+  background-color: var(--color-hover);
 }
 
 .note-list__item--active {
@@ -139,8 +201,12 @@ body {
 
 .note-list__title {
   color: var(--color-text);
-  font-size: clamp(0.85rem, calc(var(--sidebar-width) / 22), 1.2rem);
-  font-weight: 500;
+  font-size: clamp(
+    var(--font-size-small),
+    calc(var(--sidebar-width) / 22),
+    1.2rem
+  );
+  font-weight: var(--font-weight-medium);
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
@@ -149,23 +215,52 @@ body {
   max-width: calc(var(--sidebar-width) - 2rem);
 }
 
-.note-editor {
+.note-list__delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem;
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+
+.note-list__delete-button:hover {
+  opacity: 1;
+}
+
+.note-list__delete-icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-subtle);
+  transition: color var(--transition-fast);
+}
+
+.note-list__delete-button:hover .note-list__delete-icon {
+  color: var(--color-delete);
+}
+
+/* ===== EDITOR STYLES ===== */
+.editor {
   flex: 1;
-  padding: 2rem;
+  padding: var(--spacing-large);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--spacing);
 }
 
-.note-editor__header {
+.editor__header {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--spacing-small);
 }
 
-.note-editor__title {
-  font-size: 2rem;
-  font-weight: 600;
+.editor__title {
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   border: none;
   background-color: transparent;
@@ -177,18 +272,24 @@ body {
   -ms-user-select: text;
 }
 
-.note-editor__title::placeholder {
+.editor__title::placeholder {
   color: var(--color-subtle);
 }
 
-.note-editor__date {
-  font-size: 0.85rem;
+.editor__date {
+  font-size: var(--font-size-small);
   color: var(--color-subtle);
 }
 
-.note-editor__content {
-  font-size: 1.05rem;
-  line-height: 1.6;
+.editor__content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor__content {
+  font-size: var(--font-size-large);
+  line-height: var(--line-height-base);
   color: var(--color-text);
   border: none;
   background-color: transparent;
@@ -196,7 +297,7 @@ body {
   width: 100%;
   height: 100%;
   resize: none;
-  padding: 0.5rem 0;
+  padding: var(--spacing-small) 0;
   flex: 1;
   user-select: text;
   -moz-user-select: text;
@@ -204,24 +305,43 @@ body {
   -ms-user-select: text;
 }
 
-.note-editor__content::placeholder {
+.editor__content::placeholder {
   color: var(--color-subtle);
 }
 
-.note-editor__placeholder {
-  color: var(--color-subtle);
-  font-size: 1.1rem;
+.editor__empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  margin-top: 2rem;
+  height: 100%;
+  gap: var(--spacing);
 }
 
+.editor__empty-text {
+  color: var(--color-subtle);
+  font-size: var(--font-size-subtitle);
+  margin: 0;
+}
+
+.editor__shortcut {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+  background-color: var(--color-hover);
+  padding: 0.2rem 0.4rem;
+  border-radius: calc(var(--border-radius) / 2);
+  font-size: var(--font-size-small);
+}
+
+/* ===== MODAL STYLES ===== */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(43, 32, 24, 0.5);
+  background-color: var(--color-modal-overlay);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -231,9 +351,9 @@ body {
 
 .modal {
   background-color: var(--color-sidebar-bg);
-  padding: 2rem;
-  border-radius: var(--radius);
-  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.2);
+  padding: var(--spacing-large);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-modal);
   color: var(--color-text);
   width: 90%;
   max-width: 20rem;
@@ -241,28 +361,37 @@ body {
   z-index: 1000;
 }
 
-.modal p {
+.modal__text {
   margin-bottom: 1.5rem;
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   color: var(--color-text);
 }
 
-.modal-buttons {
+.modal__buttons {
   display: flex;
   justify-content: center;
-  gap: 1rem;
+  gap: var(--spacing);
 }
 
-.modal-buttons button {
-  padding: 0.5rem 1rem;
+.modal__button {
+  padding: var(--spacing-small) var(--spacing);
   font-size: 0.9rem;
   border: none;
-  border-radius: var(--radius);
+  border-radius: var(--border-radius);
   cursor: pointer;
   background-color: var(--color-accent);
   color: white;
+  transition: background-color var(--transition-fast);
 }
 
-.modal-buttons button:hover {
+.modal__button:hover {
   background-color: var(--color-accent-hover);
+}
+
+.modal__button--confirm {
+  /* Here if needed */
+}
+
+.modal__button--cancel {
+  /* Here if needed */
 }

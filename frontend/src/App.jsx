@@ -1,5 +1,6 @@
-import { NotebookPen, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import EmojiPicker from "emoji-picker-react";
+import { NotebookPen, SmilePlus, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import {
   CreateNote,
   DeleteNote,
@@ -10,16 +11,24 @@ import {
 import "./App.css";
 
 function App() {
+  const [showEmoji, setShowEmoji] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [notes, setNotes] = useState([]);
   const [selectedNoteIndex, setSelectedNoteIndex] = useState(null);
+  const selectedNoteIndexRef = useRef(null);
+  const activeInputRef = useRef(null);
 
   // Handle sidebar resizing
   useEffect(() => {
     if (!isResizing) return;
 
     const handleMouseMove = (e) => {
+      const minWidth = 16 * 8; // 8rem in pixels
+      const maxWidth = 16 * 20; // 16rem in pixels
+
+      if (e.clientX < minWidth || e.clientX > maxWidth) return;
+
       const newWidth = e.clientX;
       document.documentElement.style.setProperty(
         "--sidebar-width",
@@ -45,13 +54,19 @@ function App() {
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+      const isMac = navigator.userAgent.indexOf("Mac") !== -1;
       const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
 
       // Create note with Ctrl/Cmd + N
       if (ctrlOrCmd && e.key.toLowerCase() === "n") {
         e.preventDefault();
         handleCreate();
+      }
+
+      // Show/hide emoji menu with Ctrl/Cmd + E
+      if (ctrlOrCmd && e.key.toLowerCase() === "e") {
+        e.preventDefault();
+        setShowEmoji((prev) => !prev);
       }
 
       // Delete note with Ctrl/Cmd + Backspace
@@ -76,7 +91,7 @@ function App() {
         const data = await GetNotes();
         setNotes(data);
         if (data.length > 0 && selectedNoteIndex === null) {
-          setSelectedNoteIndex(0);
+          updateSelectedNoteIndex(0);
         }
       } catch (err) {
         console.error("Error fetching notes:", err);
@@ -86,11 +101,16 @@ function App() {
     fetchNotes();
   }, []);
 
+  const updateSelectedNoteIndex = (index) => {
+    setSelectedNoteIndex(index);
+    selectedNoteIndexRef.current = index;
+  };
+
   const handleCreate = async () => {
     await CreateNote("", "");
     const updatedNotes = await GetNotes();
     setNotes(updatedNotes);
-    setSelectedNoteIndex(updatedNotes.length - 1);
+    updateSelectedNoteIndex(updatedNotes.length - 1);
   };
 
   const formatTime = (timeString) => {
@@ -111,6 +131,64 @@ function App() {
     });
   };
 
+  const handleDeleteNote = () => {
+    DeleteNote(selectedNoteIndex);
+    setNotes((prevNotes) =>
+      prevNotes.filter((_, index) => index !== selectedNoteIndex)
+    );
+
+    if (selectedNoteIndex >= notes.length - 1) {
+      updateSelectedNoteIndex(notes.length - 2);
+    } else {
+      updateSelectedNoteIndex(null);
+    }
+
+    setShowModal(false);
+  };
+
+  const handleDeleteClick = (e, index) => {
+    e.stopPropagation();
+    updateSelectedNoteIndex(index);
+    setShowModal(true);
+  };
+
+  const handleEmojiClick = (emoji) => {
+    // Use ref for the current selected note index
+    const currentNoteIndex = selectedNoteIndexRef.current;
+
+    // Only proceed if we have a selected note and active input
+    if (currentNoteIndex === null || !activeInputRef.current) return;
+
+    const activeInput = activeInputRef.current;
+    const fieldType = activeInput.dataset.fieldType;
+
+    if (fieldType === "title") {
+      setNotes((prevNotes) => {
+        const newNotes = [...prevNotes];
+        const updatedTitle = newNotes[currentNoteIndex].title + emoji.emoji;
+        newNotes[currentNoteIndex] = {
+          ...newNotes[currentNoteIndex],
+          title: updatedTitle,
+          last_updated: new Date().toISOString(),
+        };
+        UpdateNoteTitle(currentNoteIndex, updatedTitle);
+        return newNotes;
+      });
+    } else if (fieldType === "content") {
+      setNotes((prevNotes) => {
+        const newNotes = [...prevNotes];
+        const updatedContent = newNotes[currentNoteIndex].content + emoji.emoji;
+        newNotes[currentNoteIndex] = {
+          ...newNotes[currentNoteIndex],
+          content: updatedContent,
+          last_updated: new Date().toISOString(),
+        };
+        UpdateNoteContent(currentNoteIndex, updatedContent);
+        return newNotes;
+      });
+    }
+  };
+
   const selectedNote = notes[selectedNoteIndex] || null;
 
   return (
@@ -118,28 +196,21 @@ function App() {
       {showModal && (
         <div className="modal-overlay">
           <div className="modal">
-            <p>Are you sure you want to delete this note?</p>
-            <div className="modal-buttons">
+            <p className="modal__text">
+              Are you sure you want to delete this note?
+            </p>
+            <div className="modal__buttons">
               <button
-                onClick={() => {
-                  DeleteNote(selectedNoteIndex);
-                  setNotes((prevNotes) =>
-                    prevNotes.filter((_, index) => index !== selectedNoteIndex)
-                  );
-
-                  if (selectedNoteIndex >= notes.length - 1) {
-                    setSelectedNoteIndex(notes.length - 2);
-                  } else {
-                    setSelectedNoteIndex(null);
-                  }
-
-                  setShowModal(false);
-                }}
+                className="modal__button modal__button--confirm"
+                onClick={handleDeleteNote}
               >
                 Yup!
               </button>
-              <button onClick={() => setShowModal(false)}>
-                Wait, nevermind.
+              <button
+                className="modal__button modal__button--cancel"
+                onClick={() => setShowModal(false)}
+              >
+                Wait, never mind.
               </button>
             </div>
           </div>
@@ -147,53 +218,85 @@ function App() {
       )}
 
       <div className="app">
-        <aside className="sidebar">
-          <h2
-            className="sidebar__title"
-            onClick={() => setSelectedNoteIndex(null)}
-          >
-            <span className="sidebar__title-text">espresso</span>
-          </h2>
-          <button className="sidebar__new-button" onClick={handleCreate}>
-            <span className="sidebar__new-button-text">New</span>
-            <NotebookPen className="icon" />
-          </button>
-          <ul className="note-list">
-            {notes.map((note, index) => (
-              <li
-                key={index}
-                className={`note-list__item ${
-                  index === selectedNoteIndex ? "note-list__item--active" : ""
-                }`}
-                onClick={() => setSelectedNoteIndex(index)}
-              >
-                <span className="note-list__title">
-                  {note.title || "Untitled"}
-                </span>
-                <Trash2
-                  className="icon icon--delete"
-                  onClick={(index) => {
-                    setSelectedNoteIndex(index);
-                    setShowModal(true);
-                  }}
+        <aside className={`sidebar ${showEmoji ? "sidebar--emoji-open" : ""}`}>
+          <header className="sidebar__header">
+            <h2
+              className="sidebar__title"
+              onClick={() => updateSelectedNoteIndex(null)}
+            >
+              <span className="sidebar__title-text">espresso</span>
+            </h2>
+            <button
+              className="sidebar__button sidebar__button--new"
+              onClick={handleCreate}
+            >
+              <span className="sidebar__button-text">New</span>
+              <NotebookPen className="sidebar__button-icon" />
+            </button>
+          </header>
+
+          <nav className="sidebar__nav">
+            <ul className="note-list">
+              {notes.map((note, index) => (
+                <li
+                  key={index}
+                  className={`note-list__item ${
+                    index === selectedNoteIndex ? "note-list__item--active" : ""
+                  }`}
+                  onClick={() => updateSelectedNoteIndex(index)}
+                >
+                  <span className="note-list__title">
+                    {note.title || "Untitled"}
+                  </span>
+                  <button
+                    className="note-list__delete-button"
+                    onClick={(e) => handleDeleteClick(e, index)}
+                  >
+                    <Trash2 className="note-list__delete-icon" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <footer className="sidebar__footer">
+            {showEmoji && (
+              <div className="sidebar__emoji-picker">
+                <EmojiPicker
+                  onMouseDown={(e) => e.preventDefault()}
+                  width={"100%"}
+                  skinTonesDisabled
+                  previewConfig={{ showPreview: false }}
+                  onEmojiClick={handleEmojiClick}
                 />
-              </li>
-            ))}
-          </ul>
+              </div>
+            )}
+            <button
+              className="sidebar__button sidebar__button--emoji"
+              onClick={() => setShowEmoji((prev) => !prev)}
+            >
+              <SmilePlus className="sidebar__button-icon" />
+            </button>
+          </footer>
+
           <div
             className="sidebar__resizer"
             onMouseDown={() => setIsResizing(true)}
           />
         </aside>
 
-        <main className="note-editor">
+        <main className="editor">
           {selectedNote ? (
             <>
-              <header className="note-editor__header">
+              <header className="editor__header">
                 <input
-                  className="note-editor__title"
+                  className="editor__title"
                   type="text"
                   value={selectedNote.title}
+                  data-field-type="title"
+                  onFocus={(e) => {
+                    activeInputRef.current = e.target;
+                  }}
                   onChange={(e) => {
                     UpdateNoteTitle(selectedNoteIndex, e.target.value);
                     const updatedNotes = notes.map((note, index) =>
@@ -209,56 +312,56 @@ function App() {
                   }}
                   placeholder="Untitled"
                 />
-                <p className="note-editor__date">
+                <p className="editor__date">
                   Last Updated {formatTime(selectedNote.last_updated)}
                 </p>
               </header>
-              <textarea
-                className="note-editor__content"
-                placeholder="Type here to begin..."
-                value={selectedNote.content}
-                onChange={(e) => {
-                  UpdateNoteContent(selectedNoteIndex, e.target.value);
-                  const updatedNotes = notes.map((note, index) =>
-                    index === selectedNoteIndex
-                      ? {
-                          ...note,
-                          content: e.target.value,
-                          last_updated: new Date().toISOString(),
-                        }
-                      : note
-                  );
-                  setNotes(updatedNotes);
-                }}
-              ></textarea>
+
+              <div className="editor__content-wrapper">
+                <textarea
+                  className="editor__content"
+                  placeholder="Type here to begin..."
+                  value={selectedNote.content}
+                  data-field-type="content"
+                  onFocus={(e) => {
+                    activeInputRef.current = e.target;
+                  }}
+                  onChange={(e) => {
+                    UpdateNoteContent(selectedNoteIndex, e.target.value);
+                    const updatedNotes = notes.map((note, index) =>
+                      index === selectedNoteIndex
+                        ? {
+                            ...note,
+                            content: e.target.value,
+                            last_updated: new Date().toISOString(),
+                          }
+                        : note
+                    );
+                    setNotes(updatedNotes);
+                  }}
+                />
+              </div>
             </>
           ) : (
-            <div style={{ textAlign: "center" }}>
-              <p className="note-editor__placeholder">
+            <div className="editor__empty-state">
+              <p className="editor__empty-text">
                 Start by creating a new note or selecting an existing one.
               </p>
-              <p className="note-editor__placeholder">
+              <p className="editor__empty-text">
                 You can also use shortcuts to help you speed up your workflow.
               </p>
-              <p className="note-editor__placeholder">
-                Press{" "}
-                <span
-                  className="note-editor__placeholder"
-                  style={{ fontWeight: "bold" }}
-                >
-                  Ctrl/Cmd + N
-                </span>{" "}
-                to create a new note
+              <p className="editor__empty-text">
+                Press <span className="editor__shortcut">Ctrl/Cmd + N</span> to
+                create a new note
               </p>
-              <p className="note-editor__placeholder">
+              <p className="editor__empty-text">
                 Press{" "}
-                <span
-                  className="note-editor__placeholder"
-                  style={{ fontWeight: "bold" }}
-                >
-                  Ctrl/Cmd + D
-                </span>{" "}
-                to delete a new note
+                <span className="editor__shortcut">Ctrl/Cmd + Backspace</span>{" "}
+                to delete a note
+              </p>
+              <p className="editor__empty-text">
+                Press <span className="editor__shortcut">Ctrl/Cmd + E</span> to
+                toggle emoji picker
               </p>
             </div>
           )}
