@@ -19,17 +19,89 @@ function App() {
   const selectedNoteIndexRef = useRef(null);
   const activeInputRef = useRef(null);
 
-  // Handle sidebar resizing
+  const updateSelectedNoteIndex = (index) => {
+    setSelectedNoteIndex(index);
+    selectedNoteIndexRef.current = index;
+  };
+
+  const updateNoteState = (index, updates) => {
+    setNotes((prevNotes) => {
+      const newNotes = [...prevNotes];
+      newNotes[index] = {
+        ...newNotes[index],
+        ...updates,
+        last_updated: new Date().toISOString(),
+      };
+      return newNotes;
+    });
+  };
+
+  const handleBulletLogic = (e, input) => {
+    const { selectionStart: cursorPos, value } = input;
+
+    if (e.key === " ") {
+      const textBeforeCursor = value.slice(0, cursorPos);
+      const isLineStart =
+        textBeforeCursor.length === 1 ||
+        textBeforeCursor.charAt(textBeforeCursor.length - 2) === "\n";
+
+      if (textBeforeCursor.endsWith("*") && isLineStart) {
+        e.preventDefault();
+        const newValue =
+          value.slice(0, cursorPos - 1) + "◆ " + value.slice(cursorPos);
+        input.value = newValue;
+        input.setSelectionRange(cursorPos + 1, cursorPos + 1);
+        updateNoteState(selectedNoteIndex, { content: newValue });
+        UpdateNoteContent(selectedNoteIndex, newValue);
+      }
+    }
+
+    if (e.key === "Enter") {
+      const lines = value.slice(0, cursorPos).split("\n");
+      const currentLine = lines[lines.length - 1];
+      const trimmedLine = currentLine.trimStart();
+
+      if (trimmedLine.startsWith("◆ ")) {
+        e.preventDefault();
+
+        if (trimmedLine === "◆ " || trimmedLine === "◆") {
+          // Remove bullet and stay on current line
+          const beforeBullet = value.slice(0, cursorPos - currentLine.length);
+          const afterCursor = value.slice(cursorPos);
+          const indent = currentLine.match(/^\s*/)[0];
+          const newValue = beforeBullet + indent + afterCursor;
+
+          input.value = newValue;
+          const newCursorPos = cursorPos - (currentLine.length - indent.length);
+          input.setSelectionRange(newCursorPos, newCursorPos);
+        } else {
+          // Add new bullet point
+          const indent = currentLine.match(/^\s*/)[0];
+          const newValue =
+            value.slice(0, cursorPos) +
+            "\n" +
+            indent +
+            "◆ " +
+            value.slice(cursorPos);
+
+          input.value = newValue;
+          const newCursorPos = cursorPos + 1 + indent.length + 2;
+          input.setSelectionRange(newCursorPos, newCursorPos);
+        }
+
+        updateNoteState(selectedNoteIndex, { content: input.value });
+        UpdateNoteContent(selectedNoteIndex, input.value);
+      }
+    }
+  };
+
   useEffect(() => {
     if (!isResizing) return;
 
     const handleMouseMove = (e) => {
-      const minWidth = 16 * 8; // 8rem in pixels
-      const maxWidth = 16 * 20; // 16rem in pixels
-
-      if (e.clientX < minWidth || e.clientX > maxWidth) return;
-
-      const newWidth = e.clientX;
+      const minWidth = 128;
+      const maxWidth = 320;
+      const newWidth = Math.max(minWidth, Math.min(maxWidth, e.clientX));
       document.documentElement.style.setProperty(
         "--sidebar-width",
         `${newWidth}px`
@@ -38,8 +110,6 @@ function App() {
 
     const handleMouseUp = () => {
       setIsResizing(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
     };
 
     document.addEventListener("mousemove", handleMouseMove);
@@ -51,25 +121,21 @@ function App() {
     };
   }, [isResizing]);
 
-  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      const isMac = navigator.userAgent.indexOf("Mac") !== -1;
+      const isMac = navigator.userAgent.includes("Mac");
       const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
 
-      // Create note with Ctrl/Cmd + N
       if (ctrlOrCmd && e.key.toLowerCase() === "n") {
         e.preventDefault();
         handleCreate();
       }
 
-      // Show/hide emoji menu with Ctrl/Cmd + E
       if (ctrlOrCmd && e.key.toLowerCase() === "e") {
         e.preventDefault();
         setShowEmoji((prev) => !prev);
       }
 
-      // Delete note with Ctrl/Cmd + Backspace
       if (
         ctrlOrCmd &&
         (e.key === "Backspace" || e.key === "Delete") &&
@@ -78,13 +144,16 @@ function App() {
         e.preventDefault();
         setShowModal(true);
       }
+
+      if (activeInputRef.current?.dataset.fieldType === "content") {
+        handleBulletLogic(e, activeInputRef.current);
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [notes, selectedNoteIndex]);
+  }, [selectedNoteIndex]);
 
-  // Fetch notes on initial load
   useEffect(() => {
     async function fetchNotes() {
       try {
@@ -101,11 +170,6 @@ function App() {
     fetchNotes();
   }, []);
 
-  const updateSelectedNoteIndex = (index) => {
-    setSelectedNoteIndex(index);
-    selectedNoteIndexRef.current = index;
-  };
-
   const handleCreate = async () => {
     await CreateNote("", "");
     const updatedNotes = await GetNotes();
@@ -115,11 +179,7 @@ function App() {
 
   const formatTime = (timeString) => {
     const date = new Date(timeString);
-
-    if (isNaN(date.getTime())) {
-      console.error("Invalid time format:", timeString);
-      return "Invalid date";
-    }
+    if (isNaN(date.getTime())) return "Invalid date";
 
     return date.toLocaleString("en-US", {
       hour: "2-digit",
@@ -137,12 +197,9 @@ function App() {
       prevNotes.filter((_, index) => index !== selectedNoteIndex)
     );
 
-    if (selectedNoteIndex >= notes.length - 1) {
-      updateSelectedNoteIndex(notes.length - 2);
-    } else {
-      updateSelectedNoteIndex(null);
-    }
-
+    const newIndex =
+      selectedNoteIndex >= notes.length - 1 ? notes.length - 2 : null;
+    updateSelectedNoteIndex(newIndex);
     setShowModal(false);
   };
 
@@ -153,39 +210,53 @@ function App() {
   };
 
   const handleEmojiClick = (emoji) => {
-    // Use ref for the current selected note index
-    const currentNoteIndex = selectedNoteIndexRef.current;
-
-    // Only proceed if we have a selected note and active input
-    if (currentNoteIndex === null || !activeInputRef.current) return;
+    if (selectedNoteIndexRef.current === null || !activeInputRef.current)
+      return;
 
     const activeInput = activeInputRef.current;
-    const fieldType = activeInput.dataset.fieldType;
+    const selectionStart = activeInput.selectionStart;
+    const selectionEnd = activeInput.selectionEnd;
+    const currentValue = activeInput.value;
 
-    if (fieldType === "title") {
-      setNotes((prevNotes) => {
-        const newNotes = [...prevNotes];
-        const updatedTitle = newNotes[currentNoteIndex].title + emoji.emoji;
-        newNotes[currentNoteIndex] = {
-          ...newNotes[currentNoteIndex],
-          title: updatedTitle,
-          last_updated: new Date().toISOString(),
-        };
-        UpdateNoteTitle(currentNoteIndex, updatedTitle);
-        return newNotes;
-      });
-    } else if (fieldType === "content") {
-      setNotes((prevNotes) => {
-        const newNotes = [...prevNotes];
-        const updatedContent = newNotes[currentNoteIndex].content + emoji.emoji;
-        newNotes[currentNoteIndex] = {
-          ...newNotes[currentNoteIndex],
-          content: updatedContent,
-          last_updated: new Date().toISOString(),
-        };
-        UpdateNoteContent(currentNoteIndex, updatedContent);
-        return newNotes;
-      });
+    // Insert emoji, replacing selected text if any
+    const newValue =
+      currentValue.slice(0, selectionStart) +
+      emoji.emoji +
+      currentValue.slice(selectionEnd);
+    activeInput.value = newValue;
+
+    // Update cursor position to be after the inserted emoji
+    const newCursorPos = selectionStart + emoji.emoji.length;
+    activeInput.selectionStart = newCursorPos;
+    activeInput.selectionEnd = newCursorPos;
+
+    // Update React state based on which field is active
+    if (activeInput.dataset.fieldType === "title") {
+      UpdateNoteTitle(selectedNoteIndexRef.current, newValue);
+      setNotes((prevNotes) =>
+        prevNotes.map((note, index) =>
+          index === selectedNoteIndexRef.current
+            ? {
+                ...note,
+                title: newValue,
+                last_updated: new Date().toISOString(),
+              }
+            : note
+        )
+      );
+    } else if (activeInput.dataset.fieldType === "content") {
+      UpdateNoteContent(selectedNoteIndexRef.current, newValue);
+      setNotes((prevNotes) =>
+        prevNotes.map((note, index) =>
+          index === selectedNoteIndexRef.current
+            ? {
+                ...note,
+                content: newValue,
+                last_updated: new Date().toISOString(),
+              }
+            : note
+        )
+      );
     }
   };
 
@@ -264,10 +335,11 @@ function App() {
               <div className="sidebar__emoji-picker">
                 <EmojiPicker
                   onMouseDown={(e) => e.preventDefault()}
-                  width={"100%"}
+                  width="100%"
                   skinTonesDisabled
                   previewConfig={{ showPreview: false }}
                   onEmojiClick={handleEmojiClick}
+                  lazyLoadEmojis
                 />
               </div>
             )}
@@ -298,17 +370,9 @@ function App() {
                     activeInputRef.current = e.target;
                   }}
                   onChange={(e) => {
-                    UpdateNoteTitle(selectedNoteIndex, e.target.value);
-                    const updatedNotes = notes.map((note, index) =>
-                      index === selectedNoteIndex
-                        ? {
-                            ...note,
-                            title: e.target.value,
-                            last_updated: new Date().toISOString(),
-                          }
-                        : note
-                    );
-                    setNotes(updatedNotes);
+                    const value = e.target.value;
+                    UpdateNoteTitle(selectedNoteIndex, value);
+                    updateNoteState(selectedNoteIndex, { title: value });
                   }}
                   placeholder="Untitled"
                 />
@@ -327,17 +391,9 @@ function App() {
                     activeInputRef.current = e.target;
                   }}
                   onChange={(e) => {
-                    UpdateNoteContent(selectedNoteIndex, e.target.value);
-                    const updatedNotes = notes.map((note, index) =>
-                      index === selectedNoteIndex
-                        ? {
-                            ...note,
-                            content: e.target.value,
-                            last_updated: new Date().toISOString(),
-                          }
-                        : note
-                    );
-                    setNotes(updatedNotes);
+                    const value = e.target.value;
+                    UpdateNoteContent(selectedNoteIndex, value);
+                    updateNoteState(selectedNoteIndex, { content: value });
                   }}
                 />
               </div>
